@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: codeswitch-sre
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8081}
+
+codeswitch:
+  llm:
+    model: ${AI_MODEL:claude-opus-5-5}
+    timeout: 90s
+    max-retries: 2
