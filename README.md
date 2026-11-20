@@ -1,4 +1,4 @@
-# CodeSwitch SRE — Voice-driven incident commander
+# CodeSwitch SRE — AI incident commander
 
 An AI incident commander for on-call engineers. An engineer describes what to check in plain language; the
 assistant reads service metrics and deployment history, proposes safe actions (a rollback, a status-page
@@ -53,5 +53,5 @@ refusal, cancellation, single execution, no confirm tool, and a capped agent loo
 - [x] Human confirmation gate, policy checks, audit trail
 - [x] Simulated checkout incident end to end, including recovery after rollback
 - [x] Post-incident review draft
-- [ ] Voice input (browser recording + speech-to-text) — planned: reuse the LaunchMate whisper adapter
+- [ ] Voice input — not built yet (planned: reuse the speech-to-text adapter from LaunchMate)
 - [ ] Real integrations (metrics, deployments, status page)

@@ -46,7 +46,7 @@ public class CommandController {
         this.llm = llm;
     }
 
-    /** Voice-to-text clients send the transcript here; the agent treats it as the engineer's instruction. */
+    /** Takes the engineer's text instruction; the agent treats it as data, not as a change to its rules. */
     @PostMapping("/command")
     public CommandReply command(@Valid @RequestBody CommandRequest body) {
         if (!llm.isConfigured()) {
