@@ -5,67 +5,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CodeSwitch SRE</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 880px; margin: 2rem auto; padding: 0 1rem; color: #1f2933; }
-  h1 { font-size: 1.4rem; margin-bottom: .2rem; }
-  .sub { color: #52606d; margin-top: 0; }
-  .notice { background: #fff8e1; border: 1px solid #ffe08a; padding: .6rem .8rem; border-radius: 6px; font-size: .9rem; }
-  textarea { width: 100%; min-height: 80px; font: inherit; padding: .5rem; box-sizing: border-box; }
-  button { font: inherit; padding: .4rem .9rem; margin: .2rem .2rem .2rem 0; border-radius: 6px; border: 1px solid #9aa5b1; background: #fff; cursor: pointer; }
-  button.primary { background: #1f6feb; color: #fff; border-color: #1f6feb; }
-  button.danger { color: #b42318; }
-  pre { background: #f5f7fa; padding: .8rem; border-radius: 6px; white-space: pre-wrap; }
-  .action { border: 1px solid #d9e2ec; border-radius: 6px; padding: .7rem; margin: .5rem 0; }
-  .status { font-weight: 600; }
-  .pending { color: #b54708; } .executed { color: #067647; } .cancelled, .failed { color: #b42318; }
+  :root {
+    --brand: #4f46e5; --brand-dark: #3730a3; --ok: #059669; --warn: #d97706; --bad: #dc2626;
+    --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --bg: #f1f5f9; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: linear-gradient(135deg, var(--brand), #7c3aed); color: #fff; padding: 1.2rem 1.5rem; }
+  header h1 { margin: 0; font-size: 1.35rem; }
+  header p { margin: .25rem 0 0; opacity: .9; font-size: .95rem; }
+  .badge-sim { display: inline-block; margin-top: .6rem; background: rgba(255,255,255,.2); border-radius: 999px; padding: .2rem .7rem; font-size: .8rem; }
+  main { max-width: 960px; margin: 1.5rem auto; padding: 0 1rem; display: grid; gap: 1.25rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.25rem; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .card h2 { margin: 0 0 .75rem; font-size: 1rem; color: var(--brand-dark); }
+  textarea { width: 100%; min-height: 84px; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; resize: vertical; }
+  textarea:focus { outline: 2px solid #a5b4fc; border-color: var(--brand); }
+  .row { display: flex; gap: .6rem; align-items: center; margin-top: .6rem; flex-wrap: wrap; }
+  .hint { color: var(--muted); font-size: .85rem; }
+  button { font: inherit; font-weight: 600; padding: .5rem 1rem; border-radius: 8px; border: 1px solid transparent; cursor: pointer; transition: filter .15s; }
+  button:hover { filter: brightness(.95); }
+  button:disabled { opacity: .5; cursor: default; }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-ok { background: var(--ok); color: #fff; }
+  .btn-danger { background: #fff; color: var(--bad); border-color: #fca5a5; }
+  .btn-ghost { background: #fff; color: var(--brand-dark); border-color: #c7d2fe; }
+  .reply { line-height: 1.55; font-size: .95rem; white-space: pre-wrap; background: #f8fafc; border-left: 4px solid var(--brand); padding: .9rem 1rem; border-radius: 8px; margin-top: .9rem; }
+  .reply:empty { display: none; }
+  .tools { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .6rem; }
+  .tool { background: #eef2ff; color: var(--brand-dark); border-radius: 999px; padding: .15rem .6rem; font-size: .78rem; font-family: ui-monospace, monospace; }
+  .action { border: 1px solid var(--line); border-left-width: 5px; border-radius: 10px; padding: .85rem 1rem; margin-bottom: .75rem; background: #fff; }
+  .action.PENDING { border-left-color: var(--warn); }
+  .action.EXECUTED { border-left-color: var(--ok); }
+  .action.CANCELLED, .action.FAILED { border-left-color: var(--bad); }
+  .action-head { display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .type { font-weight: 700; font-size: .8rem; letter-spacing: .04em; color: var(--muted); }
+  .pill { border-radius: 999px; padding: .18rem .65rem; font-size: .78rem; font-weight: 700; }
+  .pill.PENDING { background: #fef3c7; color: #92400e; }
+  .pill.EXECUTED { background: #d1fae5; color: #065f46; }
+  .pill.CANCELLED { background: #fee2e2; color: #991b1b; }
+  .pill.FAILED { background: #fee2e2; color: #991b1b; }
+  .detail { margin: .45rem 0; line-height: 1.45; }
+  .outcome { color: var(--muted); font-size: .88rem; }
+  .actions-row { margin-top: .6rem; display: flex; gap: .5rem; }
+  .empty { color: var(--muted); font-style: italic; }
+  pre.doc { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; white-space: pre-wrap; font-size: .85rem; line-height: 1.5; max-height: 420px; overflow: auto; }
 </style>
 </head>
 <body>
-<h1>CodeSwitch SRE — incident commander</h1>
-<p class="sub">Ask in plain language. The assistant reads metrics and proposes actions. Nothing runs until you confirm it below.</p>
-<p class="notice">Simulated infrastructure for the demo. No real systems are changed.</p>
+<header>
+  <h1>CodeSwitch SRE — incident commander</h1>
+  <p>Ask in plain language. The assistant reads metrics and proposes actions. Nothing runs until you confirm.</p>
+  <span class="badge-sim">Simulated infrastructure — no real systems are changed</span>
+</header>
 
-<h3>Ask the assistant</h3>
-<textarea id="cmd" placeholder="e.g. Check checkout. If errors are above 2%, propose a rollback."></textarea><br>
-<button class="primary" id="send">Send</button>
-<pre id="reply"></pre>
+<main>
+  <section class="card">
+    <h2>Ask the assistant</h2>
+    <textarea id="cmd" placeholder="e.g. Check checkout. If errors are above 2%, propose a rollback."></textarea>
+    <div class="row">
+      <button class="btn-primary" id="send">Send</button>
+      <span class="hint">Tip: you can describe several steps in one message.</span>
+    </div>
+    <div class="reply" id="reply"></div>
+    <div class="tools" id="tools"></div>
+  </section>
 
-<h3>Actions</h3>
-<div id="actions"><em>No actions yet.</em></div>
-<h3>Post-incident review</h3>
-<button id="rca">Generate draft</button>
-<pre id="rcaOut"></pre>
+  <section class="card">
+    <h2>Proposed actions</h2>
+    <div id="actions"><p class="empty">No actions yet.</p></div>
+  </section>
+
+  <section class="card">
+    <h2>Post-incident review</h2>
+    <button class="btn-ghost" id="rca">Generate draft</button>
+    <pre class="doc" id="rcaOut" hidden></pre>
+  </section>
+</main>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// Escape first, then apply a small safe subset of markdown (bold and code).
+const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
 
 async function api(path, opts = {}) {
   const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
   const text = await r.text();
   let body; try { body = JSON.parse(text); } catch { body = text; }
-  if (!r.ok) throw new Error((body && body.detail) || body || ("HTTP " + r.status));
+  if (!r.ok) throw new Error((body && (body.detail || body.title)) || ("Request failed (" + r.status + ")"));
   return body;
 }
 
+const TYPE_LABEL = { ROLLBACK: "ROLLBACK", STATUS_UPDATE: "STATUS PAGE" };
+
 async function loadActions() {
   const list = await api("/api/actions");
-  $("actions").innerHTML = list.length ? list.map(a => `
-    <div class="action">
-      <div><strong>${esc(a.type)}</strong> — ${esc(a.detail)}</div>
-      <div class="status ${esc(a.status.toLowerCase())}">${esc(a.status)}${a.outcome ? " · " + esc(a.outcome) : ""}</div>
-      ${a.status === "PENDING" ? `<button class="primary" data-confirm="${esc(a.id)}">Confirm</button>
-      <button class="danger" data-cancel="${esc(a.id)}">Cancel</button>` : ""}
-    </div>`).join("") : "<em>No actions yet.</em>";
+  $("actions").innerHTML = list.length ? list.slice().reverse().map(a => `
+    <div class="action ${esc(a.status)}">
+      <div class="action-head">
+        <span class="type">${esc(TYPE_LABEL[a.type] || a.type)}</span>
+        <span class="pill ${esc(a.status)}">${esc(a.status)}</span>
+      </div>
+      <div class="detail">${esc(a.detail)}</div>
+      ${a.outcome ? `<div class="outcome">${esc(a.outcome)}</div>` : ""}
+      ${a.status === "PENDING" ? `<div class="actions-row">
+        <button class="btn-ok" data-confirm="${esc(a.id)}">Confirm and run</button>
+        <button class="btn-danger" data-cancel="${esc(a.id)}">Cancel</button></div>` : ""}
+    </div>`).join("") : `<p class="empty">No actions yet.</p>`;
 }
 
 $("send").onclick = async () => {
   const text = $("cmd").value.trim(); if (!text) return;
-  $("send").disabled = true; $("reply").textContent = "Thinking…";
+  $("send").disabled = true; $("reply").innerHTML = "Thinking…"; $("tools").innerHTML = "";
   try {
     const d = await api("/api/command", { method: "POST", body: JSON.stringify({ text }) });
-    $("reply").textContent = d.reply + (d.toolsUsed.length ? "\n\n[tools used: " + d.toolsUsed.join(", ") + "]" : "");
+    $("reply").innerHTML = md(d.reply);
+    $("tools").innerHTML = d.toolsUsed.map(t => `<span class="tool">${esc(t)}</span>`).join("");
     await loadActions();
-  } catch (e) { $("reply").textContent = "Error: " + e.message; }
+  } catch (e) { $("reply").innerHTML = `<span style="color:#dc2626">${esc(e.message)}</span>`; }
   finally { $("send").disabled = false; }
 };
 
@@ -80,7 +137,8 @@ $("actions").onclick = async (e) => {
 };
 
 $("rca").onclick = async () => {
-  const r = await fetch("/api/rca?title=Checkout%20errors"); $("rcaOut").textContent = await r.text();
+  const r = await fetch("/api/rca?title=Checkout%20errors");
+  $("rcaOut").hidden = false; $("rcaOut").textContent = await r.text();
 };
 
 loadActions().catch(() => {});
