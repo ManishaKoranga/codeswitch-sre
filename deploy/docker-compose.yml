@@ -1,0 +1,17 @@
+# CodeSwitch SRE. Runs next to LaunchMate: joins the LaunchMate network so the LaunchMate Caddy
+# proxy can reach it. Port 8081 is not published to the internet; Caddy (with basic auth) is the only entry.
+name: codeswitch
+
+services:
+  app:
+    build: ..
+    container_name: codeswitch-app
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - launchmate
+
+networks:
+  launchmate:
+    external: true
+    name: launchmate_default
